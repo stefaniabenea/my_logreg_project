@@ -18,27 +18,27 @@ def train_and_evaluate(batch_size, learning_rate):
     test_loader = DataLoader(test_dataset, batch_size=batch_size)
 
     model = LogisticRegressionModel(input_dim=2)
-    criterion = nn.BCELoss()
+    loss_fn = nn.BCELoss()
     optimizer = torch.optim.SGD(model.parameters(), lr=learning_rate)
 
     print(f"\nTraining with batch_size={batch_size}, learning_rate={learning_rate}")
-    loss_history = []
+    train_losses = []
 
     for epoch in range(1, 21):
         model.train()
-        epoch_loss = 0.0
+        running_loss = 0.0
         for batch_data, batch_labels in train_loader:
             outputs = model(batch_data)
-            loss = criterion(outputs, batch_labels.unsqueeze(1))
+            loss = loss_fn(outputs, batch_labels.unsqueeze(1))
             optimizer.zero_grad()
             loss.backward()
             optimizer.step()
-            epoch_loss += loss.item() * batch_data.size(0)
-        avg_loss = epoch_loss / len(train_loader.dataset)
-        loss_history.append(avg_loss)
+            running_loss += loss.item() * batch_data.size(0)
+        avg_loss = running_loss / len(train_loader.dataset)
+        train_losses.append(avg_loss)
         print(f"Epoch {epoch:02d} → Loss: {avg_loss:.4f}")
 
-    plt.plot(loss_history, marker='o')
+    plt.plot(train_losses, marker='o')
     plt.title(f"Loss over epochs (bs={batch_size}, lr={learning_rate})")
     plt.xlabel("Epoch")
     plt.ylabel("Loss")
@@ -51,8 +51,8 @@ def train_and_evaluate(batch_size, learning_rate):
         all_labels = []
         for batch_data, batch_labels in test_loader:
             outputs = model(batch_data)
-            preds = (outputs > 0.5).float()
-            all_preds.append(preds)
+            predictions = (outputs > 0.5).float()
+            all_preds.append(predictions)
             all_labels.append(batch_labels.unsqueeze(1))
         all_preds = torch.cat(all_preds)
         all_labels = torch.cat(all_labels)
